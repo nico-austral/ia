@@ -83,10 +83,13 @@ comunas_map = {
 comuna_nombre = st.selectbox("Selecciona tu comuna", list(comunas_map.keys()))
 if comuna_nombre:
     comuna_numero = comunas_map[comuna_nombre]
-    filtered_df = df[df['comuna'] == f'Comuna {comuna_numero}']
-    st.header("Mapa de sitios de reciclaje")
-    map_center = tuple(np.mean(filtered_df['Coordinates'].tolist(), axis=0))
-    m = folium.Map(location=map_center, zoom_start=12)
-    for _, row in filtered_df.iterrows():
-        folium.Marker(row['Coordinates'], popup=f"<b>Materiales:</b> {row['materiales']}").add_to(m)
-    st_folium(m)
+    filtered_df = df[df['comuna'] == f'COMUNA {comuna_numero}']
+    if filtered_df.empty:
+        st.warning("No hay puntos de reciclaje en esta comuna")
+    else:
+        st.header("Mapa de sitios de reciclaje")
+        map_center = filtered_df['Coordinates'].apply(pd.Series).mean().tolist()
+        m = folium.Map(location=map_center, zoom_start=12)
+        for _, row in filtered_df.iterrows():
+            folium.Marker(row['Coordinates'], popup=f"<b>Materiales:</b> {row['materiales']}").add_to(m)
+        st_folium(m)
