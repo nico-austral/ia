@@ -34,26 +34,67 @@ def classify_waste(img):
     return class_name
 
 # Aplicación Streamlit
-st.title("Clasifica tu residuo y descubre dónde puedes tirarlo")
+st.set_page_config(page_title="Clasificador de Residuos", page_icon=":recycle:", layout="centered")
+
+# Agregar CSS personalizado
+st.markdown("""
+    <style>
+    
+    .stApp {
+        background-color: #ffffff;
+        padding-left: 50px;
+        padding-right: 50px;
+    }
+    .stButton>button {
+        color: white;
+        background-color: #6c757d;
+        border-radius: 10px;
+    }
+    .stFileUploader label {
+        color: #495057;
+        font-weight: bold;
+    }
+    .stImage {
+        text-align: center;
+    }
+    .css-1wa3eu0 {
+        border: 2px solid #007BFF !important; /* Blue border color */
+        border-radius: 10px;
+    }
+
+    .selectbox{
+         border-color: #000000
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+st.header("Clasifica tu residuo y descubre dónde puedes tirarlo :recycle: :round_pushpin:", divider='rainbow')
 
 # Cargar imagen
-input_img = st.file_uploader("Sube una foto de tu residuo", type=['jpg', 'png', 'jpeg'])
+st.subheader('Subí una foto de tu resiudo')
+input_img = st.file_uploader("", type=['jpg', 'png', 'jpeg'])
+
 if input_img:
-    image_file = Image.open(input_img)
-    label = classify_waste(image_file)
-    st.image(input_img, caption='Tu residuo')
-    st.subheader("Resultado de la clasificación")
-    labels_dict = {
-        "0 trash": "basura",
-        "1 battery": "batería / electrónico",
-        "2 metal": "metal",
-        "3 paper": "papel",
-        "4 glass": "vidrio",
-        "5 plastic": "plástico",
-        "6 cardboard": "cartón",
-        "7 biological": "biológico"
-    }
-    st.success(f"Tu residuo es **{labels_dict.get(label, 'No clasificado')}**")
+    col1, col2 = st.columns([1, 2])
+    
+    with col1:
+        st.image(input_img, caption='Tu residuo', use_column_width=True)
+        
+    with col2:
+        st.subheader("Resultado de la clasificación")
+        image_file = Image.open(input_img)
+        label = classify_waste(image_file)
+        labels_dict = {
+            "0 trash": "basura",
+            "1 battery": "batería / electrónico",
+            "2 metal": "metal",
+            "3 paper": "papel",
+            "4 glass": "vidrio",
+            "5 plastic": "plástico",
+            "6 cardboard": "cartón",
+            "7 biological": "biológico"
+        }
+        st.success(f"Tu residuo es **{labels_dict.get(label, 'No clasificado')}**")
 
 # Cargar el archivo de puntos verdes y las comunas
 excel_file_path = os.path.join(script_dir, "puntos-verdes.xlsx")
@@ -80,16 +121,19 @@ comunas_map = {
 }
 
 # Crear menú desplegable para seleccionar comuna
-comuna_nombre = st.selectbox("Selecciona tu comuna", list(comunas_map.keys()))
+st.subheader("Selecciona tu comuna")
+comuna_nombre = st.selectbox("",list(comunas_map.keys()))
 if comuna_nombre:
     comuna_numero = comunas_map[comuna_nombre]
     filtered_df = df[df['comuna'] == f'COMUNA {comuna_numero}']
     if filtered_df.empty:
         st.warning("No hay puntos de reciclaje en esta comuna")
     else:
-        st.header("Mapa de sitios de reciclaje")
+        st.subheader("Mapa de sitios de reciclaje")
         map_center = filtered_df['Coordinates'].apply(pd.Series).mean().tolist()
         m = folium.Map(location=map_center, zoom_start=12)
         for _, row in filtered_df.iterrows():
             folium.Marker(row['Coordinates'], popup=f"<b>Materiales:</b> {row['materiales']}").add_to(m)
-        st_folium(m)
+        st_folium(m, width=700, height=500)
+
+st.balloons()
