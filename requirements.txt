@@ -1,7 +1,7 @@
 numpy==1.26.3
 pandas==2.2.2
 Pillow==10.2.0
-keras==2.15.0
+tensorflow==2.15.0
 streamlit==1.30.0
 folium==0.16.0
 streamlit_folium==0.20.0
