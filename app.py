@@ -3,7 +3,7 @@ import re
 import numpy as np
 import pandas as pd
 from PIL import Image, ImageOps
-from tensorflow.keras.models import load_model
+from keras.models import load_model
 import streamlit as st
 import folium
 from streamlit_folium import st_folium
