@@ -68,6 +68,8 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
+st.header("Boti recicla :robot_face:", divider='rainbow')
+
 st.header("Clasifica tu residuo y descubre dónde puedes tirarlo :recycle: :round_pushpin:", divider='rainbow')
 
 # Cargar imagen
