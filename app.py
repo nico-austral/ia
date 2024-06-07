@@ -139,3 +139,16 @@ if comuna_nombre:
         st_folium(m, width=700, height=500)
 
 st.balloons()
+
+# Sección de suscripción al newsletter
+st.header("Suscríbete a nuestro newsletter")
+email = st.text_input("Ingresa tu correo electrónico")
+if st.button("Suscribirse"):
+    if email:
+        # Guardar el email en un archivo de texto
+        subscribers_file_path = os.path.join(script_dir, "subscribers.txt")
+        with open(subscribers_file_path, "a") as f:
+            f.write(email + "\n")
+        st.success(f"¡Gracias por suscribirte, {email}!")
+    else:
+        st.error("Por favor, ingresa un correo electrónico válido.")
