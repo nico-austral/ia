@@ -142,6 +142,7 @@ st.balloons()
 
 # Sección de suscripción al newsletter
 st.header("Suscríbete a nuestro newsletter")
+st.write("Enterate de las últimas novedades e iniciativas sobre reciclaje y sustentabilidad en la Ciudad de Buenos Aires")
 email = st.text_input("Ingresa tu correo electrónico")
 if st.button("Suscribirse"):
     if email:
