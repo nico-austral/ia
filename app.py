@@ -138,8 +138,6 @@ if comuna_nombre:
             folium.Marker(row['Coordinates'], popup=f"<b>Materiales:</b> {row['materiales']}").add_to(m)
         st_folium(m, width=700, height=500)
 
-st.balloons()
-
 # Sección de suscripción al newsletter
 st.header("Suscríbete a nuestro newsletter")
 email = st.text_input("Ingresa tu correo electrónico")
