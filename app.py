@@ -61,15 +61,11 @@ st.markdown("""
         border: 2px solid #007BFF !important; /* Blue border color */
         border-radius: 10px;
     }
-
-    .selectbox{
-         border-color: #000000
-    }
     </style>
     """, unsafe_allow_html=True)
 
-st.header("Boti recicla :robot_face:", divider='rainbow')
-st.header("Clasifica tu residuo y descubre dónde puedes tirarlo :recycle: :round_pushpin:", divider='rainbow')
+st.header("Boti recicla :robot_face:")
+st.header("Clasifica tu residuo y descubre dónde puedes tirarlo :recycle: :round_pushpin:")
 
 # Cargar imagen
 st.subheader('Subí una foto de tu residuo')
@@ -84,7 +80,6 @@ if input_img:
         image_file = Image.open(input_img)
         label, confidence = classify_waste(image_file)
         st.text(f"Porcentaje de confianza: {confidence*100:.2f}%")  # Mostrar en la interfaz de Streamlit
-        print(f"Porcentaje de confianza: {confidence*100:.2f}%")  # Mostrar en la consola
         if confidence < 0.8:  # Umbral de confianza ajustable
             st.warning("La clasificación no es segura. Por favor, sube otra foto.")
         else:
@@ -98,37 +93,35 @@ if input_img:
                 "6 cardboard": "cartón",
                 "7 biological": "biológico"
             }
-            st.success(f"Tu residuo es **{labels_dict.get(label, 'No clasificado')}**")
+            residuo_clasificado = labels_dict.get(label, 'No clasificado')
+            st.success(f"Tu residuo es **{residuo_clasificado}**")
 
-# Cargar el archivo de puntos verdes y los barrios
-excel_file_path = os.path.join(script_dir, "puntos-verdes.xlsx")
-df = pd.read_excel(excel_file_path)
-df['Coordinates'] = df['WKT'].apply(lambda wkt: tuple(map(float, re.findall(r'[-+]?\d*\.\d+|\d+', wkt)[::-1])))
+            # Cargar el archivo de puntos verdes y los barrios
+            excel_file_path = os.path.join(script_dir, "puntos-verdes.xlsx")
+            df = pd.read_excel(excel_file_path)
+            df['Coordinates'] = df['WKT'].apply(lambda wkt: tuple(map(float, re.findall(r'[-+]?\d*\.\d+|\d+', wkt)[::-1])))
 
-# Filtrar por barrio usando la columna barrio
-df = df.drop_duplicates(subset=['Coordinates'])
+            # Filtrar por barrio usando la columna barrio
+            df = df.drop_duplicates(subset=['Coordinates'])
 
-st.subheader("Selecciona tu barrio")
-barrios_disponibles = df['barrio'].unique()  # Asegúrate de que 'barrio' es la columna que contiene los nombres de los barrios
-barrio_nombre = st.selectbox("", barrios_disponibles)
+            st.subheader("Selecciona tu barrio")
+            barrios_disponibles = df['barrio'].unique()  # Asegúrate de que 'barrio' es la columna que contiene los nombres de los barrios
+            barrio_nombre = st.selectbox("", barrios_disponibles)
 
-# Filtrar por tipo de residuo
-
-residuos_disponibles = df['materiales'].str.split(',').apply(lambda x: [item.strip() for item in x]).explode().unique()
-
-residuo_tipo = st.selectbox("Selecciona el tipo de residuo", residuos_disponibles)
-
-if barrio_nombre and residuo_tipo:
-    filtered_df = df[(df['barrio'].str.contains(barrio_nombre, case=False)) & (df['materiales'].str.contains(residuo_tipo, case=False))]
-    if filtered_df.empty:
-        st.warning("No hay puntos de reciclaje para este tipo de residuo en este barrio")
-    else:
-        st.subheader("Mapa de sitios de reciclaje")
-        map_center = filtered_df['Coordinates'].apply(pd.Series).mean().tolist()
-        m = folium.Map(location=map_center, zoom_start=12)
-        for _, row in filtered_df.iterrows():
-            folium.Marker(row['Coordinates'], popup=f"<b>Materiales:</b> {row['materiales']}").add_to(m)
-        st_folium(m, width=700, height=500)
+            if barrio_nombre:
+                filtered_df = df[(df['barrio'].str.contains(barrio_nombre, case=False)) & (df['materiales'].str.contains(residuo_clasificado, case=False))]
+                if filtered_df.empty:
+                    st.warning("No hay puntos de reciclaje para este tipo de residuo en este barrio")
+                else:
+                    st.subheader("Mapa de sitios de reciclaje")
+                    map_center = filtered_df['Coordinates'].apply(pd.Series).mean().tolist()
+                    m = folium.Map(location=map_center, zoom_start=12)
+                    for _, row in filtered_df.iterrows():
+                        folium.Marker(
+                            row['Coordinates'],
+                            popup=f"<b>Dirección:</b> {row['direccion']}<br><b>Materiales:</b> {row['materiales']}"
+                        ).add_to(m)
+                    st_folium(m, width=1000, height=600)  # Ajustar el ancho del mapa
 
 # Sección de suscripción al newsletter
 st.header("Suscríbete a nuestro newsletter")
@@ -148,3 +141,4 @@ if st.button("Suscribirse"):
         st.success(f"¡Gracias por suscribirte, {email}!")
     else:
         st.error("Por favor, ingresa un correo electrónico válido.")
+
