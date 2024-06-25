@@ -9,6 +9,7 @@ import folium
 from folium.plugins import MarkerCluster
 from streamlit_folium import st_folium
 import base64
+import sqlite3
 
 # Configuración de la página
 st.set_page_config(page_title="Clasificador de Residuos", page_icon="BotiRecicla.png", layout="wide")
@@ -173,14 +174,25 @@ with tab2:
     def is_valid_email(email):
         return re.match(r"[^@]+@[^@]+\.[^@]+", email)
 
+    # Conectar a la base de datos SQLite
+    conn = sqlite3.connect(os.path.join(script_dir, 'subscribers.db'))
+    cursor = conn.cursor()
+    cursor.execute('''CREATE TABLE IF NOT EXISTS subscribers (email TEXT PRIMARY KEY)''')
+    conn.commit()
+
     if st.button("Suscribirse"):
         if email and is_valid_email(email):
-            subscribers_file_path = os.path.join(script_dir, "subscribers.txt")
-            with open(subscribers_file_path, "a") as f:
-                f.write(email + "\n")
-            st.success(f"¡Gracias por suscribirte, {email}!")
+            try:
+                cursor.execute("INSERT INTO subscribers (email) VALUES (?)", (email,))
+                conn.commit()
+                st.success(f"¡Gracias por suscribirte, {email}!")
+            except sqlite3.IntegrityError:
+                st.warning("Este correo ya está suscrito.")
         else:
             st.error("Por favor, ingresa un correo electrónico válido.")
+    
+    # Cerrar la conexión a la base de datos
+    conn.close()
 
     st.subheader("Descubrí cómo se trabaja dentro de un centro de reciclaje")
     st.video("https://www.youtube.com/watch?v=pTw0_R6dUkg")
