@@ -95,7 +95,7 @@ st.markdown("""
     """, unsafe_allow_html=True)
 
 # Crear pestañas
-tab1, tab2 = st.tabs(["Clasificación de Residuos", "Información y Suscripción"])
+tab1, tab2, tab3 = st.tabs(["Clasificación de Residuos", "Información y Suscripción", "Gestión de Suscriptores"])
 
 with tab1:
     st.markdown('<h1 style="text-align: center;"><img src="data:image/png;base64,{}" width="50"/> Boti Recicla</h1>'.format(image_base64), unsafe_allow_html=True)
@@ -191,8 +191,56 @@ with tab2:
         else:
             st.error("Por favor, ingresa un correo electrónico válido.")
     
-    # Cerrar la conexión a la base de datos
-    conn.close()
-
     st.subheader("Descubrí cómo se trabaja dentro de un centro de reciclaje")
     st.video("https://www.youtube.com/watch?v=pTw0_R6dUkg")
+
+# Contraseña para acceder a la gestión de suscriptores
+admin_password = "tu_contraseña_secreta"
+
+with tab3:
+    st.header("Gestión de Suscriptores")
+
+    # Pedir la contraseña al usuario
+    password = st.text_input("Introduce la contraseña para acceder", type="password")
+    if st.button("Enviar"):
+        if password == "neuraldios":
+            # Conectar a la base de datos SQLite
+            conn = sqlite3.connect(os.path.join(script_dir, 'subscribers.db'))
+            cursor = conn.cursor()
+
+            def get_all_subscribers():
+                cursor.execute("SELECT * FROM subscribers")
+                rows = cursor.fetchall()
+                return rows
+
+            def delete_subscriber(email):
+                cursor.execute("DELETE FROM subscribers WHERE email=?", (email,))
+                conn.commit()
+            
+            subscribers = get_all_subscribers()
+            
+            st.subheader("Lista de Suscriptores")
+            if subscribers:
+                df_subscribers = pd.DataFrame(subscribers, columns=["Email"])
+                st.dataframe(df_subscribers)
+
+                csv = df_subscribers.to_csv(index=False)
+                b64 = base64.b64encode(csv.encode()).decode()  # some strings
+                href = f'<a href="data:file/csv;base64,{b64}" download="subscribers.csv">Descargar CSV</a>'
+                st.markdown(href, unsafe_allow_html=True)
+            else:
+                st.write("No hay suscriptores registrados.")
+
+            st.subheader("Eliminar Suscriptor")
+            email_to_delete = st.text_input("Correo electrónico del suscriptor a eliminar")
+            if st.button("Eliminar"):
+                if email_to_delete:
+                    delete_subscriber(email_to_delete)
+                    st.success(f"Suscriptor {email_to_delete} eliminado exitosamente.")
+                else:
+                    st.error("Por favor, ingresa un correo electrónico válido.")
+            
+            # Cerrar la conexión a la base de datos
+            conn.close()
+        else:
+            st.error("Contraseña incorrecta. Por favor, inténtalo de nuevo.")
