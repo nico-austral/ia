@@ -70,26 +70,80 @@ df = load_recycling_points()
 # Agregar CSS personalizado
 st.markdown("""
     <style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap');
     .stApp {
-        background-color: white;
+        background-color: white;  /* Fondo verde claro */
         padding-left: 50px;
         padding-right: 50px;
+        font-family: 'Poppins', sans-serif;
     }
     .stButton>button {
         color: white;
         background-color: #6c757d;
         border-radius: 10px;
+        font-family: 'Poppins', sans-serif;
     }
     .stFileUploader label {
         color: #495057;
         font-weight: bold;
+        font-family: 'Poppins', sans-serif;
     }
     .stImage {
         text-align: center;
+        font-family: 'Poppins', sans-serif;
     }
     .css-1wa3eu0 {
         border: 2px solid #007BFF !important; /* Blue border color */
         border-radius: 10px;
+        font-family: 'Poppins', sans-serif;
+    }
+    .stTabs [data-baseweb="tab-list"] {
+        display: flex;
+        justify-content: space-between;
+        font-family: 'Poppins', sans-serif;
+    }
+    .stTabs [data-baseweb="tab"] {
+        font-size: 20px !important;
+        font-weight: bold !important;
+    }
+    .stTabs [data-baseweb="tab"]:nth-child(3) {
+        margin-left: auto;
+    }
+    .stTabs [data-baseweb="tab"]:nth-child(3)::before {
+        content: '\\1F5DD'; /* Icono de llave */
+        margin-right: 8px;
+    }
+    h1, h2, h3, h4, h5, h6, .stHeader, .stText {
+        font-family: 'Poppins', sans-serif;
+    }
+    h1 {
+        font-weight: bold;
+        font-size: 50px;
+    }
+    .byline {
+        font-style: italic;
+        font-size: 18px;
+    }
+    video::-webkit-media-controls {
+        display: none !important;
+    }
+    .stCameraInput {
+        display: none; /* Ocultar inicialmente */
+    }
+    .camera-button {
+        font-size: 20px;
+        color: #6c757d;
+        cursor: pointer;
+    }
+    .camera-button:hover {
+        color: #007BFF;
+    }
+    @keyframes rotate {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    .logo-spin {
+        animation: rotate 2s linear infinite;
     }
     </style>
     """, unsafe_allow_html=True)
@@ -97,14 +151,25 @@ st.markdown("""
 # Crear pestañas
 tab1, tab2, tab3 = st.tabs(["Clasificación de Residuos", "Información y Suscripción", "Gestión de Suscriptores"])
 
+# Estado de la cámara
+if 'camera_active' not in st.session_state:
+    st.session_state['camera_active'] = False
+
 with tab1:
-    st.markdown('<h1 style="text-align: center;"><img src="data:image/png;base64,{}" width="50"/> Boti Recicla</h1>'.format(image_base64), unsafe_allow_html=True)
+    st.markdown('<h1 style="text-align: center;"><img id="logo" src="data:image/png;base64,{}" width="50" onclick="spinLogo()"/> Boti Recicla <span class="byline">By NeuralDios</span></h1>'.format(image_base64), unsafe_allow_html=True)
     st.header("Clasifica tu residuo y descubre dónde puedes tirarlo :recycle: :round_pushpin:")
 
     # Cargar imagen
     st.subheader('Subí una foto de tu residuo o toma una foto con tu dispositivo')
     input_img = st.file_uploader("Selecciona una imagen de tu residuo", type=['jpg', 'png', 'jpeg'], label_visibility="collapsed")
-    img_data = st.camera_input("Toma una foto de tu residuo")
+
+    if st.button("📷 Tomar una foto de tu residuo"):
+        st.session_state['camera_active'] = not st.session_state['camera_active']
+
+    if st.session_state['camera_active']:
+        img_data = st.camera_input("Toma una foto de tu residuo")
+    else:
+        img_data = None
 
     if input_img or img_data:
         if input_img:
@@ -118,7 +183,7 @@ with tab1:
         with col2:
             st.subheader("Resultado de la clasificación")
             label, confidence = classify_waste(image)
-            st.text(f"Porcentaje de confianza: {confidence*100:.2f}%")
+           # st.text(f"Porcentaje de confianza: {confidence*100:.2f}%")
             if confidence < 0.99:
                 st.warning("La clasificación no es segura. Por favor, sube otra foto.")
             else:
@@ -212,10 +277,6 @@ with tab3:
                 cursor.execute("SELECT * FROM subscribers")
                 rows = cursor.fetchall()
                 return rows
-
-            def delete_subscriber(email):
-                cursor.execute("DELETE FROM subscribers WHERE email=?", (email,))
-                conn.commit()
             
             subscribers = get_all_subscribers()
             
@@ -231,16 +292,22 @@ with tab3:
             else:
                 st.write("No hay suscriptores registrados.")
 
-            st.subheader("Eliminar Suscriptor")
-            email_to_delete = st.text_input("Correo electrónico del suscriptor a eliminar")
-            if st.button("Eliminar"):
-                if email_to_delete:
-                    delete_subscriber(email_to_delete)
-                    st.success(f"Suscriptor {email_to_delete} eliminado exitosamente.")
-                else:
-                    st.error("Por favor, ingresa un correo electrónico válido.")
-            
             # Cerrar la conexión a la base de datos
             conn.close()
         else:
             st.error("Contraseña incorrecta. Por favor, inténtalo de nuevo.")
+
+# Agregar script de JavaScript para controlar la cámara y la animación del logo
+st.markdown("""
+    <script>
+    function toggleCamera() {
+        var cameraInput = document.querySelector('.stCameraInput');
+        if (cameraInput.style.display === "none" || cameraInput.style.display === "") {
+            cameraInput.style.display = "block";
+        } else {
+            cameraInput.style.display = "none";
+        }
+    }
+
+    </script>
+    """, unsafe_allow_html=True)
