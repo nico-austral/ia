@@ -119,10 +119,16 @@ st.markdown("""
     h1 {
         font-weight: bold;
         font-size: 50px;
+        margin-bottom: 5px;  /* Espacio entre título y subtítulo */
+        text-align: center;  /* Centrar el título */
     }
     .byline {
-        font-style: italic;
-        font-size: 18px;
+      
+        font-family: 'Poppins', sans-serif;
+        font-weight: bold;
+        font-size: 19px;
+        text-align: center;  /* Alinear al centro */
+        margin-top: 0;  /* Remover margen superior */
     }
     video::-webkit-media-controls {
         display: none !important;
@@ -156,7 +162,12 @@ if 'camera_active' not in st.session_state:
     st.session_state['camera_active'] = False
 
 with tab1:
-    st.markdown('<h1 style="text-align: center;"><img id="logo" src="data:image/png;base64,{}" width="50" onclick="spinLogo()"/> Boti Recicla <span class="byline">By NeuralDios</span></h1>'.format(image_base64), unsafe_allow_html=True)
+    st.markdown(f'''
+    <div style="text-align: center;">
+        <h1><img id="logo" src="data:image/png;base64,{image_base64}" width="50" onclick="spinLogo()"/> Boti Recicla</h1>
+        <div class="byline">By NeuralDios</div>
+    </div>
+    ''', unsafe_allow_html=True)
     st.header("Clasifica tu residuo y descubre dónde puedes tirarlo :recycle: :round_pushpin:")
 
     # Cargar imagen
@@ -183,7 +194,6 @@ with tab1:
         with col2:
             st.subheader("Resultado de la clasificación")
             label, confidence = classify_waste(image)
-           # st.text(f"Porcentaje de confianza: {confidence*100:.2f}%")
             if confidence < 0.99:
                 st.warning("La clasificación no es segura. Por favor, sube otra foto.")
             else:
@@ -308,6 +318,5 @@ st.markdown("""
             cameraInput.style.display = "none";
         }
     }
-
     </script>
     """, unsafe_allow_html=True)
